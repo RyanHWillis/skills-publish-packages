@@ -3,29 +3,42 @@ on:
   push:
     branches:
       - main
+
 permissions:
   packages: write
   contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      # Add your test steps here if needed...
-      - name: Docker meta
+
+      # Optional: run tests here
+      # - name: Run tests
+      #   run: npm test
+
+      - name: Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/RyanHWillis/publish-packages/game
           tags: type=sha
+
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build container
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+
+      - name: Build and push multi-arch container
         uses: docker/build-push-action@v5
         with:
           context: .
